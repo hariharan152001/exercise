@@ -1,0 +1,18 @@
+import tensorflow as tf
+from tensorflow.keras.layers import Input, Embedding, LSTM, Dense
+from tensorflow.keras.models import Model
+import numpy as np
+
+sample_audio_features = np.random.rand(100, 100)
+input_layer = Input(shape=(100,))
+embedding = Embedding(input_dim=10000, output_dim=128)(input_layer) 
+lstm = LSTM(128)(embedding)
+output_layer = Dense(10, activation='softmax')(lstm)
+speech_recognition_model = Model(inputs=input_layer, outputs=output_layer)
+speech_recognition_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+sample_labels = np.random.randint(10, size=(100, 10))
+speech_recognition_model.fit(sample_audio_features, sample_labels, epochs=5, batch_size=32)
+sample_input_audio = np.random.rand(1, 100)
+predicted_probs = speech_recognition_model.predict(sample_input_audio)
+predicted_word_index = np.argmax(predicted_probs)
+print("Predicted Word Index:", predicted_word_index)
