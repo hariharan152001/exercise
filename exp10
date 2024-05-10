@@ -1,0 +1,31 @@
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+texts = [
+ "I love this product!",
+ "This is terrible.",
+ "The movie was amazing.",
+ "I'm not sure how I feel about it."
+]
+labels = np.array([1, 0, 1, 0])
+tokenizer = Tokenizer(num_words=1000, oov_token="<OOV>")
+tokenizer.fit_on_texts(texts)
+word_index = tokenizer.word_index
+sequences = tokenizer.texts_to_sequences(texts)
+padded_sequences = pad_sequences(sequences, maxlen=10, padding='post', 
+truncating='post')
+model = tf.keras.Sequential([
+ tf.keras.layers.Embedding(input_dim=len(word_index) + 1, output_dim=16, 
+input_length=10),
+ tf.keras.layers.LSTM(16),
+ tf.keras.layers.Dense(1, activation='sigmoid')
+])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.fit(padded_sequences, labels, epochs=3, verbose=1)
+sample_test_text = ["This is a great product!"]
+sample_test_sequence = tokenizer.texts_to_sequences(sample_test_text)
+sample_padded_sequence = pad_sequences(sample_test_sequence, maxlen=10, 
+padding='post', truncating='post')
+prediction = model.predict(sample_padded_sequence)
+print("Predicted Sentiment:", "Positive" if prediction > 0.5 else "Negative")
