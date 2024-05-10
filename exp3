@@ -1,0 +1,40 @@
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+# Generate synthetic data for binary classification
+np.random.seed(0)
+X = np.random.randn(1000, 10)  # 1000 samples with 10 features
+y = np.random.randint(2, size=1000)  # Binary labels (0 or 1)
+
+# Split data into training and testing sets
+X_train, X_test = X[:800], X[800:]
+y_train, y_test = y[:800], y[800:]
+
+# Step 1: Define the architecture of the neural network
+input_dim = X_train.shape[1]  # Number of features
+hidden_layers = 2
+neurons_per_layer = 64
+activation_function = 'relu'
+output_dim = 1  # Binary classification
+
+# Step 2: Build the model
+model = Sequential()
+model.add(Dense(neurons_per_layer, input_dim=input_dim, activation=activation_function))
+for _ in range(hidden_layers - 1):
+    model.add(Dense(neurons_per_layer, activation=activation_function))
+model.add(Dense(output_dim, activation='sigmoid'))  # Output layer
+
+# Step 3: Compile the model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Step 4: Train the model
+epochs = 3
+batch_size = 32
+model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1)
+
+# Step 5: Evaluate the model
+loss, accuracy = model.evaluate(X_test, y_test)
+print("Test Loss:", loss)
+print("Test Accuracy:", accuracy)
