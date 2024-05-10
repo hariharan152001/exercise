@@ -1,0 +1,11 @@
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+from sklearn.model_selection import train_test_split
+data = pd.read_csv('C://Users//STUDENT//Downloads//archive (2)//AMZN.csv')
+features = ['Adj Close', 'Volume']
+train_data, test_data = train_test_split(data[features], test_size=0.2, random_state=42)
+model = IsolationForest(contamination=0.05)
+model.fit(train_data)
+predictions = model.predict(test_data)
+num_anomalies = len(predictions[predictions == -1])
+print("Number of Anomalies Detected:", num_anomalies)
