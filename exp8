@@ -1,0 +1,70 @@
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+
+# Define your text corpus for training
+text = "The quick brown fox jumped over the lazy dog"
+
+# Create a vocabulary (set of unique characters in the text)
+vocab = sorted(set(text))
+
+# Create a mapping from characters to integers and vice versa
+char_to_index = {char: index for index, char in enumerate(vocab)}
+index_to_char = {index: char for index, char in enumerate(vocab)}
+
+# Prepare training data
+max_sequence_length = 10  # Adjust as needed
+step = 1
+sequences = []
+next_chars = []
+for i in range(0, len(text) - max_sequence_length, step):
+    input_sequence = text[i: i + max_sequence_length]
+    target_char = text[i + max_sequence_length]
+    sequences.append([char_to_index[char] for char in input_sequence])
+    next_chars.append(char_to_index[target_char])
+
+# Prepare input data as tensors
+x = np.zeros((len(sequences), max_sequence_length, len(vocab)), dtype=bool)
+y = np.zeros((len(sequences), len(vocab)), dtype=bool)
+for i, sequence in enumerate(sequences):
+    for t, char_index in enumerate(sequence):
+        x[i, t, char_index] = 1
+    y[i, next_chars[i]] = 1
+
+# Build the RNN model
+model = Sequential()
+model.add(LSTM(128, input_shape=(max_sequence_length, len(vocab))))
+model.add(Dense(len(vocab), activation='softmax'))
+
+# Compile the model
+model.compile(loss='categorical_crossentropy', optimizer='adam')
+
+# Train the model
+model.fit(x, y, batch_size=128, epochs=5)
+
+# Generate text using the trained model
+def generate_text(seed_text, num_chars_to_generate=10):
+    generated_text = seed_text
+    for _ in range(num_chars_to_generate):
+        input_sequence = generated_text[-max_sequence_length:]
+        x_pred = np.zeros((1, max_sequence_length, len(vocab)), dtype=bool)
+        for t, char in enumerate(input_sequence):
+            x_pred[0, t, char_to_index[char]] = 1
+        predicted_char_index = np.argmax(model.predict(x_pred, verbose=0))
+        predicted_char = index_to_char[predicted_char_index]
+        generated_text += predicted_char
+    return generated_text
+
+seed_text = "The quick brown fox jumped over the lazy dog"
+
+# Define the number of times to repeat the sentence
+num_chars_to_generate=10
+# Generate the output
+generated_text = ""
+for i in range(num_chars_to_generate):
+    generated_text += seed_text + ", and "
+generated_text = generated_text[:-6]  # Remove the last ", and "
+
+# Print the output
+print(generated_text)
